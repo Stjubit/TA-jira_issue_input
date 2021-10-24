@@ -1,6 +1,7 @@
 # Splunk
 local/
 splunk.lic
+splunkbase.credentials
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
