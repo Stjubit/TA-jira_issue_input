@@ -1,3 +1,7 @@
+# Splunk
+local/
+splunk.lic
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

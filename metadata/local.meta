@@ -1,0 +1,14 @@
+[props/jira_issue]
+owner = admin
+version = 8.2.2
+modtime = 1635072095.132587000
+
+[props/source%3A%3A...ta-jira_issue_input%2A.log%2A]
+owner = admin
+version = 8.2.2
+modtime = 1635072095.519157000
+
+[props/source%3A%3A...ta_jira_issue_input%2A.log%2A]
+owner = admin
+version = 8.2.2
+modtime = 1635072095.897455000

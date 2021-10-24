@@ -1,2 +1,8 @@
 # TA-jira_issue_input
-Splunk Add-on to collect Jira issue data
+
+TBD
+
+## How to dev
+
+- put your Splunk developer license in the root of this repository as `splunk.lic` file
+- start the Docker instace: `docker compose up [-d]`
