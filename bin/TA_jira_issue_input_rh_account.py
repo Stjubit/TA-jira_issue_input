@@ -1,5 +1,4 @@
-
-import ta_jira_issue_input_declare
+import ta_jira_issue_input_declare  # noqa: F401
 
 from splunktaucclib.rest_handler.endpoint import (
     field,
@@ -15,53 +14,53 @@ util.remove_http_proxy_env_vars()
 
 fields = [
     field.RestField(
-        'jira_server',
+        "jira_server",
         required=True,
         encrypted=False,
         default=None,
         validator=validator.String(
-            min_len=0, 
-            max_len=8192, 
-        )
-    ), 
+            min_len=0,
+            max_len=8192,
+        ),
+    ),
     field.RestField(
-        'verify_jira_server_certificate',
+        "verify_jira_server_certificate",
         required=False,
         encrypted=False,
         default=True,
-        validator=None
-    ), 
+        validator=None,
+    ),
     field.RestField(
-        'username',
+        "username",
         required=True,
         encrypted=False,
         default=None,
         validator=validator.String(
-            min_len=1, 
-            max_len=200, 
-        )
+            min_len=1,
+            max_len=200,
+        ),
     ),
     field.RestField(
-        'password',
+        "password",
         required=True,
         encrypted=True,
         default=None,
         validator=validator.String(
-            min_len=1, 
-            max_len=8192, 
-        )
-    )
+            min_len=1,
+            max_len=8192,
+        ),
+    ),
 ]
 model = RestModel(fields, name=None)
 
 
 endpoint = SingleModel(
-    'ta_jira_issue_input_account',
+    "ta_jira_issue_input_account",
     model,
 )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     admin_external.handle(
         endpoint,
         handler=ConfigMigrationHandler,
