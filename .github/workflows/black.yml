@@ -1,5 +1,5 @@
 ---
-name: black check
+name: code quality checks
 on: [push]
 jobs:
   black_check:
@@ -7,3 +7,5 @@ jobs:
     steps:
       - name: Code format checks
         uses: jpetrucciani/black-check@master
+        with:
+          path: ${{ github.workspace }}
