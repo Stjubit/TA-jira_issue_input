@@ -14,13 +14,16 @@ jobs:
         uses: jpetrucciani/black-check@master
         with:
           path: ${{ github.workspace }}
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
   flake8_py3:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.7.4
+          python-version: 3.7.12
           architecture: x64
       - name: Check out repository code
         uses: actions/checkout@v2
