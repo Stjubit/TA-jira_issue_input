@@ -12,3 +12,61 @@ modtime = 1635072095.519157000
 owner = admin
 version = 8.2.2
 modtime = 1635072095.897455000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_account%3Antseu%60%60splunk_cred_sep%60%601%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635179656.217849000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_account%3Antseu%60%60splunk_cred_sep%60%602%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635179656.224234000
+
+[ta_jira_issue_input_account/ntseu]
+owner = admin
+version = 8.2.2
+modtime = 1635179656.229621000
+
+[inputs/jira_issue%3A%2F%2Fdefsd_issues]
+owner = admin
+version = 8.2.2
+modtime = 1635184100.730269000
+
+[ta_jira_issue_input_settings/logging]
+version = 8.2.2
+modtime = 1635158643.108586000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_settings%3Aproxy%60%60splunk_cred_sep%60%601%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635184918.054891000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_settings%3Aproxy%60%60splunk_cred_sep%60%602%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635184918.069582000
+
+[ta_jira_issue_input_settings/proxy]
+version = 8.2.2
+modtime = 1635184918.074423000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_account%3Antseu_mssp%60%60splunk_cred_sep%60%601%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635185220.820469000
+
+[passwords/credential%3A__REST_CREDENTIAL__%23TA-jira_issue_input%23configs%2Fconf-ta_jira_issue_input_account%3Antseu_mssp%60%60splunk_cred_sep%60%602%3A]
+owner = admin
+version = 8.2.2
+modtime = 1635185220.826514000
+
+[ta_jira_issue_input_account/ntseu_mssp]
+owner = admin
+version = 8.2.2
+modtime = 1635185220.832656000
+
+[inputs/jira_issue%3A%2F%2Fmssp_issues]
+owner = admin
+version = 8.2.2
+modtime = 1635185586.422508000

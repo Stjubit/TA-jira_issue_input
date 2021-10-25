@@ -32,51 +32,7 @@ fields = [
             min_len=1, 
             max_len=80, 
         )
-    ), 
-    field.RestField(
-        'input_name',
-        required=True,
-        encrypted=False,
-        default=None,
-        validator=validator.String(
-            min_len=0, 
-            max_len=8192, 
-        )
-    ), 
-    field.RestField(
-        'retrieval_interval',
-        required=True,
-        encrypted=False,
-        default='300',
-        validator=validator.String(
-            min_len=0, 
-            max_len=8192, 
-        )
-    ), 
-    field.RestField(
-        'destination_index',
-        required=True,
-        encrypted=False,
-        default=None,
-        validator=None
-    ), 
-    field.RestField(
-        'jira_server',
-        required=True,
-        encrypted=False,
-        default=None,
-        validator=validator.String(
-            min_len=0, 
-            max_len=8192, 
-        )
-    ), 
-    field.RestField(
-        'verify_jira_server_certificate',
-        required=False,
-        encrypted=False,
-        default=True,
-        validator=None
-    ), 
+    ),
     field.RestField(
         'jql',
         required=True,
@@ -97,13 +53,27 @@ fields = [
             max_len=8192, 
         )
     ), 
-
+    field.RestField(
+        'expand_fields',
+        required=False,
+        encrypted=False,
+        validator=validator.String(
+            min_len=0, 
+            max_len=8192, 
+        )
+    ), 
     field.RestField(
         'disabled',
         required=False,
         validator=None
-    )
-
+    ),
+    field.RestField(
+        'service_account',
+        required=True,
+        encrypted=False,
+        default=None,
+        validator=None
+    ), 
 ]
 model = RestModel(fields, name=None)
 

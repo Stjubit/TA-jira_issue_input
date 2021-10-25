@@ -15,6 +15,23 @@ util.remove_http_proxy_env_vars()
 
 fields = [
     field.RestField(
+        'jira_server',
+        required=True,
+        encrypted=False,
+        default=None,
+        validator=validator.String(
+            min_len=0, 
+            max_len=8192, 
+        )
+    ), 
+    field.RestField(
+        'verify_jira_server_certificate',
+        required=False,
+        encrypted=False,
+        default=True,
+        validator=None
+    ), 
+    field.RestField(
         'username',
         required=True,
         encrypted=False,
@@ -23,7 +40,7 @@ fields = [
             min_len=1, 
             max_len=200, 
         )
-    ), 
+    ),
     field.RestField(
         'password',
         required=True,

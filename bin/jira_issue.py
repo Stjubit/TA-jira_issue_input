@@ -46,33 +46,17 @@ class ModInputjira_issue(modinput_wrapper.base_modinput.BaseModInput):
         For customized inputs, hard code the arguments here to hide argument detail from users.
         For other input types, arguments should be get from input_module. Defining new input types could be easier.
         """
-        scheme.add_argument(smi.Argument("input_name", title="Input Name",
-                                         description="Jira Issue Input Name (e.g. service_desk_issues)",
-                                         required_on_create=True,
-                                         required_on_edit=False))
-        scheme.add_argument(smi.Argument("retrieval_interval", title="Retrieval Interval",
-                                         description="Interval in seconds the Jira issue data is retrieved",
-                                         required_on_create=True,
-                                         required_on_edit=False))
-        scheme.add_argument(smi.Argument("destination_index", title="Destination Index",
-                                         description="The index in which the Jira issue data should be stored",
-                                         required_on_create=True,
-                                         required_on_edit=False))
-        scheme.add_argument(smi.Argument("jira_server", title="Jira Server",
-                                         description="Jira Server Hostname (without http(s)://)",
-                                         required_on_create=True,
-                                         required_on_edit=False))
-        scheme.add_argument(smi.Argument("verify_jira_server_certificate", title="Verify Jira Server Certificate",
-                                         description="Whether the Jira server certificate should be verified",
-                                         required_on_create=False,
-                                         required_on_edit=False))
         scheme.add_argument(smi.Argument("jql", title="JQL (Jira Query Language)",
                                          description="The JQL (Jira Query Language) search filter defines which Jira issues to collect",
                                          required_on_create=True,
                                          required_on_edit=False))
         scheme.add_argument(smi.Argument("issue_fields", title="Issue Fields",
-                                         description="Comma-separated list of Jira issue fields to collect",
+                                         description="Comma-separated list of Jira issue fields to collect (also supports *all and other wildcards)",
                                          required_on_create=True,
+                                         required_on_edit=False))
+        scheme.add_argument(smi.Argument("expand_fields", title="Expand Fields",
+                                         description="Comma-separated list of Jira issue fields to expand (optional - see https://docs.atlassian.com/software/jira/docs/api/REST/latest/)",
+                                         required_on_create=False,
                                          required_on_edit=False))
         return scheme
 
@@ -89,11 +73,11 @@ class ModInputjira_issue(modinput_wrapper.base_modinput.BaseModInput):
 
     def get_account_fields(self):
         account_fields = []
+        account_fields.append('service_account')
         return account_fields
 
     def get_checkbox_fields(self):
         checkbox_fields = []
-        checkbox_fields.append("verify_jira_server_certificate")
         return checkbox_fields
 
     def get_global_checkbox_fields(self):
