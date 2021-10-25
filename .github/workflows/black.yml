@@ -18,3 +18,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           failIf: new
           args: "bin/*.py"
+        if: github.event_name == 'pull_request'
