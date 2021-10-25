@@ -1,2 +1,9 @@
 ---
-uses: jpetrucciani/black-check@master
+name: black check
+on: [push]
+jobs:
+  black_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code format checks
+        uses: jpetrucciani/black-check@master
