@@ -11,6 +11,7 @@ jobs:
         uses: jpetrucciani/black-check@master
   flake8_py3:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v2
       - uses: grantmcconnaughey/lintly-flake8-github-action@v1.0
@@ -18,4 +19,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           failIf: new
           args: "bin/*.py"
-        if: github.event_name == 'pull_request'
