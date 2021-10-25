@@ -2,10 +2,13 @@
 name: code quality checks
 on: [push]
 jobs:
-  black_check:
+  black:
     runs-on: ubuntu-latest
     steps:
-      - name: Code format checks
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - name: Code format checks (Black)
         uses: jpetrucciani/black-check@master
         with:
           path: ${{ github.workspace }}
