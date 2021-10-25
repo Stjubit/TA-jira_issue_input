@@ -1,6 +1,6 @@
 ---
 name: code quality checks
-on: [push]
+on: [push, pull_request]
 jobs:
   black:
     runs-on: ubuntu-latest
@@ -11,7 +11,6 @@ jobs:
         uses: jpetrucciani/black-check@master
   flake8_py3:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v2
       - uses: grantmcconnaughey/lintly-flake8-github-action@v1.0
