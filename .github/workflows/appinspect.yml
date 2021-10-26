@@ -33,7 +33,7 @@ jobs:
       
       - uses: splunk/appinspect-cli-action@v1
         with:
-          app_path: ${{ github.event.repository.name }}_$APP_VERSION.tgz
+          app_path: ${{ github.event.repository.name }}_${{ env.APP_VERSION }}.tgz
       
       - uses: actions/upload-artifact@v2
         with:
