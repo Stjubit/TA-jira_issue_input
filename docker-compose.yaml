@@ -20,4 +20,4 @@ services:
       - 8089
     volumes:
       - ./splunk.lic:/tmp/splunk.lic
-      - ./:/opt/splunk/etc/apps/TA-jira_issue_input
+      - ./TA-jira_issue_input:/opt/splunk/etc/apps/TA-jira_issue_input

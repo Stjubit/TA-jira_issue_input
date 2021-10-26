@@ -17,4 +17,4 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           failIf: new
-          args: "bin/*.py"
+          args: "TA-jira_issue_input/bin/*.py"
