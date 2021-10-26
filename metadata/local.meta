@@ -1,4 +1,4 @@
-[props/jira_issue]
+[props/jira:issue]
 owner = admin
 version = 8.2.2
 modtime = 1635072095.132587000
