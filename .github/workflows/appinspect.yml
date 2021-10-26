@@ -8,10 +8,13 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
       
+      - name: Set app version
+        run: echo "APP_VERSION=${GITHUB_REF:-0.0.1}" >> $GITHUB_ENV
+
       - name: Update version
         run: |
           pip install crudini
-          crudini --set ${{ github.event.repository.name }}/default/app.conf launcher version 2.2.2
+          crudini --set ${{ github.event.repository.name }}/default/app.conf launcher version $APP_VERSION
           cat ${{ github.event.repository.name }}/default/app.conf
       
       - name: Package App
@@ -19,11 +22,11 @@ jobs:
           find TA-jira_issue_input -type f -exec chmod 644 '{}' \;
           find TA-jira_issue_input -type d -exec chmod 755 '{}' \;
           find TA-jira_issue_input -type f -name "*.sh" -exec chmod +x '{}' \;
-          tar -cvzf ${{ github.event.repository.name }}_0.0.1.tgz TA-jira_issue_input
+          tar -cvzf ${{ github.event.repository.name }}_$APP_VERSION.tgz TA-jira_issue_input
       
       - uses: splunk/appinspect-cli-action@v1
         with:
-          app_path: ${{ github.event.repository.name }}_0.0.1.tgz
+          app_path: ${{ github.event.repository.name }}_$APP_VERSION.tgz
       
       - uses: actions/upload-artifact@v2
         with:
