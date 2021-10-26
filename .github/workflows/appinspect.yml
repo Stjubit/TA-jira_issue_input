@@ -9,9 +9,11 @@ jobs:
         uses: actions/checkout@v2
       - name: Remove unrelated Splunk App files
         run: rm -r .git .github .gitignore .flake8 docker-compose.yaml pyproject.toml
+      - name: Package App
+        run: tar -cvzf ${{ github.event.repository.name }}_0.0.1.tgz .
       - uses: splunk/appinspect-cli-action@v1
         with:
-          app_path: '.'
+          app_path: ${{ github.event.repository.name }}_0.0.1.tgz
       - uses: actions/upload-artifact@v2
         with:
           name: AppInspect results
