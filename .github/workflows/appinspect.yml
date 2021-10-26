@@ -7,6 +7,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+      - name: Remove unrelated Splunk App files
+        run: rm -r .git .github .gitignore .flake8 docker-compose.yaml pyproject.toml
       - uses: splunk/appinspect-cli-action@v1
         with:
           app_path: '.'

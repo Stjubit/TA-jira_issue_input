@@ -1,5 +1,5 @@
 ---
-name: code quality checks
+name: Code Quality Checks
 on: [pull_request]
 jobs:
   black:
