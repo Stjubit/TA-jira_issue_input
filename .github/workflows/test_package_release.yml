@@ -39,3 +39,25 @@ jobs:
         with:
           name: AppInspect results
           path: appinspect_result.json
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        with:
+          release_name: ${{ env.APP_VERSION }}
+          tag_name: ${{ github.ref }}
+          body: Release ${{ env.APP_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ github.event.repository.name }}_${{ env.APP_VERSION }}.tgz
+          asset_name: ${{ github.event.repository.name }}_${{ env.APP_VERSION }}.tgz
+          asset_content_type: application/gzip
