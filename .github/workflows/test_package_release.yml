@@ -2,7 +2,7 @@
 name: Splunk AppInspect
 on: [ push ]
 jobs:
-  appinspect:
+  test_package_release:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -12,7 +12,7 @@ jobs:
         run: |
           version=${GITHUB_REF##*/}
 
-          if [[ "$version" == "appinspect" ]]; then
+          if [[ "$version" == "test_package_release" ]]; then
             version="0.0.1"
           fi
 
