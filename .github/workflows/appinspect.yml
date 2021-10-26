@@ -13,7 +13,7 @@ jobs:
       #   run: tar -cvzf /tmp/${{ github.event.repository.name }}_0.0.1.tgz .
       - uses: splunk/appinspect-cli-action@v1
         with:
-          app_path: ${{ github.workspace }}
+          app_path: /github
       - uses: actions/upload-artifact@v2
         with:
           name: AppInspect results
