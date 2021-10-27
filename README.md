@@ -1,15 +1,49 @@
 # TA-jira_issue_input
 
-TBD
+This Splunk Technical Add-on enables you to index Jira issues by querying your Jira servers' REST API. You can control which issues to index by specifying a JQL query string.
+
+**Example:**
+
+`project = SD AND updated > -15m`
+
+- this JQL query string matches all issues in the service desk (SD) project that have been updated during the last 15 minutes
+
+## Why you should not use Jira Issues Collector Add-on
+
+The Add-on [Jira Issues Collector](https://splunkbase.splunk.com/app/4814/) does not support API pagination. That means if your JQL query string returns more than the maximum allowable value defined by the Jira property `jira.search.views.default.max`, which defaults to `100`, you will loose data.
+
+This TA supports API pagination and adds some additional functionalities!
+
+## Configuration
+
+1. Setup the Jira Account by going to the configuration page of the TA-jira_issue_input app: **Configuration** -> **Account**
+
+- **Account Name** | Unique name of the account
+- **Jira Server** | Jira Server Hostname (without `http(s)://`)
+- **Verify Jira Server Certificate** | Whether the Jira server certificate should be verified
+- **Username** | Jira REST API username
+- **Password** | Jira REST API password
+
+2. *(Optional)* Setup a proxy to use for the requests to the Jira REST API: **Configuration** -> **Proxy**
+
+3. Add your Jira issue input on the app **Inputs** configuration page
+
+- **Name** | Unique name of the data input (this also represents the `source` field)
+- **Interval** | Time interval of input in seconds
+- **Index** | The destination index in which the Jira issue data will be stored
+- **Jira Account** | The Jira account configured in step 1
+- **JQL (Jira Query Language)** | The JQL query string defines which issues to collect
+- **Issue Fields** | Comma-separated list of Jira issue fields to collect. This config option also supports wildcards like *all. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/#search-search).
+- **Expand Fields** | *(optional)* Comma-separated list of entities to expand. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/).
 
 ## How to dev
 
-- put your Splunk developer license in the root of this repository in the `splunk.lic` file
-- create a file `splunkbase.credentials` in the root of this repository and add Splunkbase credentials (BugMeNot):
+- Put your Splunk developer license in the root of this repository in a file called `splunk.lic`
+- Create a file with the name `splunkbase.credentials` in the root of this repository and add working Splunkbase credentials in it *(hint: BugMeNot)*:
 
 ```
 SPLUNKBASE_USERNAME=<username>
 SPLUNKBASE_PASSWORD=<password>
 ```
 
-- start the Docker instace: `docker compose up [-d]`
+- Start the Docker instace: `docker compose up [-d]`
