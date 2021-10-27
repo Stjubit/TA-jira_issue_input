@@ -33,7 +33,7 @@ This TA supports API pagination and adds some additional functionalities!
 - **Index** | The destination index in which the Jira issue data will be stored
 - **Jira Account** | The Jira account configured in step 1
 - **JQL (Jira Query Language)** | The JQL query string defines which issues to collect
-- **Issue Fields** | Comma-separated list of Jira issue fields to collect. This config option also supports wildcards like *all. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/#search-search).
+- **Issue Fields** | Comma-separated list of Jira issue fields to collect. This config option also supports wildcards like \*all. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/#search-search).
 - **Expand Fields** | *(optional)* Comma-separated list of entities to expand. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/).
 
 ## How to dev
