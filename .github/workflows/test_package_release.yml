@@ -10,8 +10,7 @@ jobs:
       
       - name: Set app version
         run: |
-          echo "$GITHUB_REF"
-          if [[ "$GITHUB_REF" == "refs/tags/*" ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             version=${GITHUB_REF##*/}
           else
             version="0.0.1"
