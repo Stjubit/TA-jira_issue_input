@@ -56,7 +56,8 @@ class ModInputjira_issue(modinput_wrapper.base_modinput.BaseModInput):
                 title="JQL (Jira Query Language)",
                 description=(
                     "The JQL (Jira Query Language) search filter defines which Jira issues to"
-                    " collect"
+                    " collect (more infos:"
+                    " https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/#search-search)"
                 ),
                 required_on_create=True,
                 required_on_edit=False,

@@ -385,7 +385,7 @@
                         {
                             "field": "jql",
                             "label": "JQL (Jira Query Language)",
-                            "help": "The JQL (Jira Query Language) search filter defines which Jira issues to collect (also supports wildcards like *all - more infos: https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/#search-search)",
+                            "help": "The JQL (Jira Query Language) search filter defines which Jira issues to collect (more infos: https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/#search-search)",
                             "required": true,
                             "type": "text",
                             "defaultValue": "updated > -10m",
