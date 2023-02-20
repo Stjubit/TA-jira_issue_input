@@ -79,13 +79,13 @@ def collect_events(helper, ew):
 
         request_params = {
             "jql": opt_jql,
-            "fields": "updated,{}".format(opt_issue_fields),
+            "fields": "updated,{}".format(opt_issue_fields.replace(" ", "")),
             "validateQuery": "true",
             "startAt": start_at,
         }
 
         if opt_expand_fields:
-            request_params["expand"] = opt_expand_fields
+            request_params["expand"] = opt_expand_fields.replace(" ", "")
 
         request_headers = {
             "Authorization": "Basic {}".format(
@@ -117,6 +117,46 @@ def collect_events(helper, ew):
         if len(jira_issues) == 0:
             helper.log_debug("All API pages have been queried for input {}".format(opt_input_name))
             new_issues_fetched = False
+
+        # workaround for bug JRASERVER-34746 (worklog field is limited to 20 results)
+        if "worklog" in [field.strip() for field in opt_issue_fields.split(",")]:
+            for issue in jira_issues:
+                if (
+                    ("worklog" in issue["fields"])
+                    and ("maxResults" in issue["fields"]["worklog"])
+                    and ("total" in issue["fields"]["worklog"])
+                ):
+                    # check if the API did not return all worklogs for the issue
+                    worklog_max_results = issue["fields"]["worklog"]["maxResults"]
+                    worklog_total = issue["fields"]["worklog"]["total"]
+
+                    if worklog_total > worklog_max_results:
+                        helper.log_debug(
+                            "The issue {} contains more than {} worklogs. Fetching all worklogs ...".format(
+                                issue["key"], worklog_max_results
+                            )
+                        )
+
+                        # fetch all worklogs from issue (this endpoint does not support pagination: JRASERVER-69308)
+                        worklog_response = helper.send_http_request(
+                            url="https://{}/rest/api/2/issue/{}/worklog".format(
+                                opt_jira_server, issue["key"]
+                            ),
+                            method="GET",
+                            verify=opt_verify_cert,
+                            headers=request_headers,
+                        )
+
+                        if not worklog_response.ok:
+                            helper.log_warning(
+                                "The Jira REST API returned an error when fetching worklogs for issue {} in input {} - not all worklogs will be shown in the event: {}".format(
+                                    issue["key"], opt_input_name, response.text
+                                )
+                            )
+                            continue
+
+                        # replace worklog in issue object
+                        issue["fields"]["worklog"] = worklog_response.json()
 
         # API pagination
         start_at = start_at + response_data["maxResults"]

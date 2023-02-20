@@ -8,12 +8,6 @@ This Splunk Technical Add-on enables you to index Jira issues by querying your J
 
 - this JQL query string matches all issues in the service desk (SD) project that have been updated during the last 15 minutes
 
-## Why you should not use Jira Issues Collector Add-on
-
-The Add-on [Jira Issues Collector](https://splunkbase.splunk.com/app/4814/) does not support API pagination. That means if your JQL query string returns more than the maximum allowable value defined by the Jira property `jira.search.views.default.max`, which defaults to `100`, you will loose data.
-
-This TA supports API pagination and adds some additional functionalities!
-
 ## Configuration
 
 1. Setup the Jira Account by going to the configuration page of the TA-jira_issue_input app: **Configuration** -> **Account**
@@ -35,6 +29,10 @@ This TA supports API pagination and adds some additional functionalities!
 - **JQL (Jira Query Language)** | The JQL query string defines which issues to collect
 - **Issue Fields** | Comma-separated list of Jira issue fields to collect. This config option also supports wildcards like \*all. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/#search-search).
 - **Expand Fields** | *(optional)* Comma-separated list of entities to expand. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/).
+
+## Additional Notes
+
+This TA includes a workaround for [JRASERVER-34746](https://jira.atlassian.com/browse/JRASERVER-34746), which means you can use the `worklog` field to fetch all worklogs.
 
 ## How to dev
 
