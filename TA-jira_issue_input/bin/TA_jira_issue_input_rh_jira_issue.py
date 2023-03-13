@@ -101,7 +101,9 @@ class JiraIssueInputRestHandler(AdminExternalHandler):
         # if it is empty, set its default value to one week ago
         if not self.payload.get("last_updated_start_time"):
             default_last_updated_start_time = datetime.utcnow() - timedelta(7)
-            self.payload["last_updated_start_time"] = default_last_updated_start_time.strftime("%Y-%m-%d %H:%M")
+            self.payload["last_updated_start_time"] = default_last_updated_start_time.strftime(
+                "%Y-%m-%d %H:%M"
+            )
 
     def handleList(self, confInfo):
         AdminExternalHandler.handleList(self, confInfo)
@@ -113,13 +115,16 @@ class JiraIssueInputRestHandler(AdminExternalHandler):
 
     def handleEdit(self, confInfo):
         AdminExternalHandler.handleEdit(self, confInfo)
-    
+
     def handleRemove(self, confInfo):
         # delete the checkpoint
-        checkpoint = checkpointer.KVStoreCheckpointer("TA_jira_issue_input_checkpointer", self.getSessionKey(), "TA-jira_issue_input")
+        checkpoint = checkpointer.KVStoreCheckpointer(
+            "TA_jira_issue_input_checkpointer", self.getSessionKey(), "TA-jira_issue_input"
+        )
         checkpoint.delete(self.callerArgs.id)
 
         AdminExternalHandler.handleRemove(self, confInfo)
+
 
 if __name__ == "__main__":
     admin_external.handle(
