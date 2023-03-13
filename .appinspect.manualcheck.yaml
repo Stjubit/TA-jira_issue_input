@@ -1,0 +1,66 @@
+check_all_python_files_are_well_formed:
+  comment: 'ACK'
+check_for_environment_variable_use_in_python:
+  comment: 'ACK'
+check_splunk_logo:
+  comment: 'ACK'
+check_for_offensive_material:
+  comment: 'ACK'
+check_for_builtin_functions:
+  comment: 'ACK'
+check_for_auto_update_features:
+  comment: 'ACK'
+check_for_data_compression_and_archiving:
+  comment: 'ACK'
+check_fs_writes:
+  comment: 'ACK'
+check_for_python_runtime_services:
+  comment: 'ACK'
+check_hard_coded_paths:
+  comment: 'ACK'
+check_documented_included_open_source:
+  comment: 'ACK'
+check_requires_access_to_files_outside_apps_dir:
+  comment: 'ACK'
+check_for_binary_files_without_source_code:
+  comment: 'ACK'
+check_for_stacktrace_returned_to_user:
+  comment: 'ACK'
+check_built_in_import_function:
+  comment: 'ACK'
+check_authorization_credentials:
+  comment: 'ACK'
+check_dependencies:
+  comment: 'ACK'
+check_for_remote_code_execution_in_javascript:
+  comment: 'ACK'
+check_install_on_claimed_targets:
+  comment: 'ACK'
+check_for_generic_operating_system_services:
+  comment: 'ACK'
+check_embedded_links:
+  comment: 'ACK'
+check_for_reverse_shells:
+  comment: 'ACK'
+check_for_importing_modules:
+  comment: 'ACK'
+check_for_ms_windows_specific_services:
+  comment: 'ACK'
+check_external_data_sources:
+  comment: 'ACK'
+check_for_plain_text_credentials_in_python:
+  comment: 'ACK'
+check_for_file_and_directory_access:
+  comment: 'ACK'
+check_link_includes_contact_info:
+  comment: 'ACK'
+check_for_known_vulnerabilities_in_third_party_libraries:
+  comment: 'ACK'
+check_for_insecure_http_calls_in_python:
+  comment: 'ACK'
+check_editing_and_proofreading:
+  comment: 'ACK'
+check_for_data_persistence:
+  comment: 'ACK'
+check_for_interprocess_communication_and_networking:
+  comment: 'ACK'
