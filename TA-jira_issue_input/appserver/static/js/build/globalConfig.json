@@ -385,10 +385,10 @@
                         {
                             "field": "jql",
                             "label": "JQL (Jira Query Language)",
-                            "help": "The JQL (Jira Query Language) search filter defines which Jira issues to collect (more infos: https://docs.atlassian.com/software/jira/docs/api/REST/8.13.12/#search-search)",
+                            "help": "The JQL (Jira Query Language) search filter defines which Jira issues to collect (more infos: http://confluence.atlassian.com/display/JIRA/Advanced+Searching)",
+                            "tooltip": "If you filter for the 'updated' field, the input does not use checkpoints to only index the latest data!",
                             "required": true,
                             "type": "text",
-                            "defaultValue": "updated > -10m",
                             "validators": [
                                 {
                                     "type": "string",
@@ -396,9 +396,24 @@
                                     "maxLength": 8192,
                                     "errorMsg": "Max length of text input is 8192"
                                 }
+                            ]
+                        },
+                        {
+                            "field": "last_updated_start_time",
+                            "label": "Last Updated Start Time",
+                            "help": "The start time for the input defines which Jira issues should be collected based on their last updated time. Format: 'YYYY-MM-DD hh:mm' (UTC). Default: 1 week ago",
+                            "tooltip": "This field only applies if you DO NOT specify the 'updated' field in the JQL search filter!",
+                            "required": false,
+                            "type": "text",
+                            "validators": [
+                                {
+                                    "type": "regex",
+                                    "pattern": "^([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])\\s([01][0-9]|2[0-3]):([0-5][0-9])$",
+                                    "errorMsg": "Date should be valid and in mentioned format"
+                                }
                             ],
                             "options": {
-                                "placeholder": "updated > -10m"
+                                "disableonEdit": true
                             }
                         },
                         {

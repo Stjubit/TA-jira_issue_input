@@ -2,17 +2,19 @@
 version: "3.9"
 
 services:
-  splunk_standalone:
-    container_name: splunk_standalone
-    image: splunk/splunk:8.2.2
+  splmaster001:
+    container_name: splmaster001
+    image: splunk/splunk:9.0.4
     command: start
+    user: "0:41812"
     environment:
-      SPLUNK_HOSTNAME: splunk
+      SPLUNK_HOSTNAME: splmaster001
       SPLUNK_START_ARGS: --accept-license
       SPLUNK_PASSWORD: secret123
       SPLUNK_ROLE: splunk_standalone
       SPLUNK_LICENSE_URI: /tmp/splunk.lic
       SPLUNK_APPS_URL: https://splunkbase.splunk.com/app/2962/release/4.1.2/download
+      SPLUNK_SECRET: "3R3ZHQLPmC2p9hzw8Mp63qprZ.HsAZILrK4HJjWXEZH0oYdhbdKEqUYJXG6.0CATXwYf5ZSoKBpIOo1qLAJOngbUXppNDdCmR5QLS7aNC5y3V5jueIPYVP5iO8kUZ1plcximud2RQjXvLjCpFfMglMNEea7NtwYYiKiytNAKhOxuGrffP3kBUOwyFIrzk11XjpJi8YFC4nx84JEFwZYgamxgUsyDBptm7zfAc0riziaG8Yp1QiP.q1j1llnuHx"
     env_file:
       - splunkbase.credentials
     ports:
@@ -20,4 +22,5 @@ services:
       - 8089
     volumes:
       - ./splunk.lic:/tmp/splunk.lic
+      - ./splmaster001-default.yaml:/tmp/defaults/default.yml
       - ./TA-jira_issue_input:/opt/splunk/etc/apps/TA-jira_issue_input
