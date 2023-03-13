@@ -1,5 +1,10 @@
 import ta_jira_issue_input_declare  # noqa: F401
 
+from datetime import datetime, timedelta
+from solnlib.modular_input import checkpointer
+from TA_jira_issue_input_validation import (  # isort: skip
+    DateValidator,
+)
 from splunktaucclib.rest_handler.endpoint import (
     field,
     validator,
@@ -7,7 +12,7 @@ from splunktaucclib.rest_handler.endpoint import (
     DataInputModel,
 )
 from splunktaucclib.rest_handler import admin_external, util
-from splunk_aoblib.rest_migration import ConfigMigrationHandler
+from splunktaucclib.rest_handler.admin_external import AdminExternalHandler
 
 util.remove_http_proxy_env_vars()
 
@@ -43,6 +48,13 @@ fields = [
         ),
     ),
     field.RestField(
+        "last_updated_start_time",
+        required=False,
+        encrypted=False,
+        default=None,
+        validator=DateValidator(),
+    ),
+    field.RestField(
         "issue_fields",
         required=True,
         encrypted=False,
@@ -75,8 +87,42 @@ endpoint = DataInputModel(
 )
 
 
+class JiraIssueInputRestHandler(AdminExternalHandler):
+    """
+    Custom REST Handler for Jira issue inputs that supports
+    checkpoint deletion when an input is deleted
+    """
+
+    def __init__(self, *args, **kwargs):
+        AdminExternalHandler.__init__(self, *args, **kwargs)
+
+    def verifyOrUpdateLastUpdatedStartTime(self):
+        # check if last_updated_start_time field is empty
+        # if it is empty, set its default value to one week ago
+        if not self.payload.get("last_updated_start_time"):
+            default_last_updated_start_time = datetime.utcnow() - timedelta(7)
+            self.payload["last_updated_start_time"] = default_last_updated_start_time.strftime("%Y-%m-%d %H:%M")
+
+    def handleList(self, confInfo):
+        AdminExternalHandler.handleList(self, confInfo)
+
+    def handleCreate(self, confInfo):
+        self.verifyOrUpdateLastUpdatedStartTime()
+
+        AdminExternalHandler.handleCreate(self, confInfo)
+
+    def handleEdit(self, confInfo):
+        AdminExternalHandler.handleEdit(self, confInfo)
+    
+    def handleRemove(self, confInfo):
+        # delete the checkpoint
+        checkpoint = checkpointer.KVStoreCheckpointer("TA_jira_issue_input_checkpointer", self.getSessionKey(), "TA-jira_issue_input")
+        checkpoint.delete(self.callerArgs.id)
+
+        AdminExternalHandler.handleRemove(self, confInfo)
+
 if __name__ == "__main__":
     admin_external.handle(
         endpoint,
-        handler=ConfigMigrationHandler,
+        handler=JiraIssueInputRestHandler,
     )

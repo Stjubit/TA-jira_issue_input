@@ -4,9 +4,9 @@ This Splunk Technical Add-on enables you to index Jira issues by querying your J
 
 **Example:**
 
-`project = SD AND updated > -15m`
+`project = SD AND status != "Canceled"`
 
-- this JQL query string matches all issues in the service desk (SD) project that have been updated during the last 15 minutes
+- this JQL query string matches all issues in the service desk (SD) project that haven't been canceled
 
 ## Configuration
 
@@ -26,9 +26,49 @@ This Splunk Technical Add-on enables you to index Jira issues by querying your J
 - **Interval** | Time interval of input in seconds
 - **Index** | The destination index in which the Jira issue data will be stored
 - **Jira Account** | The Jira account configured in step 1
-- **JQL (Jira Query Language)** | The JQL query string defines which issues to collect
+- **JQL (Jira Query Language)** | The JQL (Jira Query Language) search filter defines which Jira issues to collect (more infos: [Advanced Searching](http://confluence.atlassian.com/display/JIRA/Advanced+Searching)). If you filter for the `updated` field, the input does not use checkpoints to only index the latest data!
+- **Last Updated Start Time** | The start time for the input defines which Jira issues should be collected based on their last updated time. Format: `YYYY-MM-DD hh:mm` (UTC). Default: 1 week ago. This field only applies if you DO NOT specify the `updated` field in the JQL search filter!
 - **Issue Fields** | Comma-separated list of Jira issue fields to collect. This config option also supports wildcards like \*all. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/#search-search).
 - **Expand Fields** | *(optional)* Comma-separated list of entities to expand. More infos can be found [here](https://docs.atlassian.com/software/jira/docs/api/REST/latest/).
+
+## Checkpoints
+
+This app uses [KV Store checkpoints](https://splunk.github.io/addonfactory-solutions-library-python/modular_input/checkpointer/#solnlib.modular_input.checkpointer.KVStoreCheckpointer) to save the latest state of an input in order to only index updated Jira issues since the last run. This feature has been added in version `1.1.0` of this TA.
+
+### How to view checkpoint values
+
+You can use the `jira_issue_input_checkpointer_lookup` lookup to view the current checkpoint value(s). **Example search:**
+
+```
+| inputlookup jira_issue_input_checkpointer_lookup
+| eval input_name=_key
+```
+
+### How to reindex Jira issues
+
+You can easily reindex data by modifying the checkpoint value for an input. The timestamp has to be an integer in milliseconds! **Example search:**
+
+```
+| inputlookup jira_issue_input_checkpointer_lookup
+| search _key="<input_name>"
+| eval state="1678718462404"
+| outputlookup jira_issue_input_checkpointer_lookup
+```
+
+*Please note that checkpoints are only used if you do not specify an `updated` field in your JQL!*
+
+Of course, you can also just delete and create an input to reindex data!
+
+## Update Notes
+
+### 1.0.x to > 1.1.0
+
+Version `1.1.0` added checkpoint support to the TA by adding a new field to the input called `Last Updated Start Time` (`last_updated_start_time`).
+
+Your inputs will continue to work the same way after upgrading from `1.0.x` to `1.1.x`, but I highly recommend to migrate to checkpoints. There are two ways how you can do this:
+
+1. Update the TA and let your inputs run at least one time. This will initialize the checkpoint with `updated` timestamps from the input. You can disable and enable an input to make it run manually. After that, you can just edit your inputs and remove filters for the `updated` field from your JQL. This will make sure that the input now uses the checkpoint for data retrieval.
+2. Reconfigure your inputs and set the `Last Updated Start Time` field to the last time the old input was running. Remove filters for the `updated` field from your JQL.
 
 ## Additional Notes
 
@@ -45,3 +85,14 @@ SPLUNKBASE_PASSWORD=<password>
 ```
 
 - Start the Docker instace: `docker compose up [-d]`
+### Linux File Permissions
+
+Please make sure that files outside of the `bin/` and `appserver/controllers` directory do not have execute permissions and are not `.exe` files. Splunk recommends `644` for all app files outside of the `bin/` directory, `644` for scripts within the `bin/` directory that are invoked using an interpreter (e.g. `python my_script.py` or `sh my_script.sh`), and `755` for scripts within the `bin/` directory that are invoked directly (e.g. `./my_script.sh` or `./my_script`). Here's a snippet that ensures that file permissions are correct:
+
+```
+sudo find TA-jira_issue_input -type d -exec chmod 755 {} +
+sudo find TA-jira_issue_input -type f -exec chmod 644 {} +
+sudo find TA-jira_issue_input/bin/ -type f -name "*.exe" -exec chmod 755 {} +
+```
+
+**More infos:** [Splunk AppInspect check criteria](https://dev.splunk.com/enterprise/reference/appinspect/appinspectcheck/)

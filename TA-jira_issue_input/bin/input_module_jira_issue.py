@@ -2,8 +2,23 @@
 import sys
 import base64
 import json
+import re
 
-from datetime import datetime
+from requests.exceptions import RequestException
+from datetime import datetime, timedelta, timezone
+
+
+def _parse_datetime(helper, datetimestr):
+    """
+    This function is used to validate and parse a given Jira datetime string
+    """
+    try:
+        return datetime.strptime(datetimestr, "%Y-%m-%d %H:%M")
+    except ValueError:
+        helper.log_warning(
+            "The provided last updated start time does not match the required format '%Y-%m-%d %H:%M'"
+        )
+        return None
 
 
 def validate_input(helper, definition):
@@ -33,6 +48,7 @@ def collect_events(helper, ew):
 
     # get input options
     opt_jql = helper.get_arg("jql")
+    opt_last_updated_start_time = helper.get_arg("last_updated_start_time")
     opt_issue_fields = helper.get_arg("issue_fields")
     opt_expand_fields = helper.get_arg("expand_fields")  # optional
     opt_service_account = helper.get_arg("service_account")
@@ -62,12 +78,89 @@ def collect_events(helper, ew):
         )
         sys.exit(1)
 
+    # check if checkpoint already exists
+    checkpoint_value = helper.get_check_point(opt_input_name)
+
+    if checkpoint_value is None:
+        helper.log_info(
+            "The checkpoint for input {} does not yet exist! Initializing checkpoint ...".format(
+                opt_input_name
+            )
+        )
+
+        default_last_updated_start_time = datetime.utcnow() - timedelta(7)
+        checkpoint_value = int(default_last_updated_start_time.timestamp() * 1000)
+
+        if opt_last_updated_start_time:
+            helper.log_info(
+                "A last updated start time has been configured for the input! Validating timestamp ..."
+            )
+
+            last_updated_start_time = _parse_datetime(helper, opt_last_updated_start_time)
+            if last_updated_start_time is not None:
+                # set checkpoint to last_updated_start_time
+                helper.log_info("The provided last updated start time is valid!")
+                checkpoint_value = int(last_updated_start_time.timestamp() * 1000)
+            else:
+                # use the default last updated start time
+                helper.log_warning(
+                    "The provided last updated start time is invalid - the checkpoint will be initialized with default values!"
+                )
+        else:
+            helper.log_info(
+                "The input started without a last updated start time setting - the checkpoint will be initialized with default values!"
+            )
+
+        helper.log_info(
+            "Initializing checkpoint with value '{}' ({})".format(
+                checkpoint_value,
+                datetime.fromtimestamp(checkpoint_value / 1000).strftime("%Y-%m-%d %H:%M UTC"),
+            )
+        )
+
+        try:
+            helper.save_check_point(opt_input_name, checkpoint_value)
+            helper.log_info("Successfully initialized checkpoint!")
+        except Exception as exc:
+            helper.log_critical(
+                "Unable to initialize checkpoint - the input can't be started! Exception: {}".format(
+                    exc
+                )
+            )
+            sys.exit(1)
+
+    # split JQL to check for updated field
+    jql_parts = [part.lower() for part in re.split("[^a-zA-Z]", opt_jql)]
+    helper.log_debug("JQL splitted parts: {}".format(jql_parts))
+
+    # verify if checkpoint should be used for data collection or not
+    if ("updated" in jql_parts) or ("updateddate" in jql_parts):
+        helper.log_info(
+            "Starting input {} without using the checkpoint, because an updated field has been set in the JQL filter!".format(
+                opt_input_name
+            )
+        )
+    else:
+        helper.log_info(
+            "Starting input {} with checkpoint value {} ({})!".format(
+                opt_input_name,
+                checkpoint_value,
+                datetime.fromtimestamp(checkpoint_value / 1000).strftime("%Y-%m-%d %H:%M.%f UTC"),
+            )
+        )
+
+        # add checkpoint value to JQL
+        opt_jql = "updated > {} AND {}".format(checkpoint_value, str(opt_jql).strip())
+        helper.log_debug("Updated JQL: {}".format(opt_jql))
+
     # API pagination
     # maxResults is not used, because every Jira server can have different limits
     # total is not used, because it is not included in the response for expensive searches
+    # last_updated_time gets initialized with checkpoint value
     start_at = 0
     new_issues_fetched = True
     num_issues_indexed = 0
+    last_updated_time = datetime.fromtimestamp(checkpoint_value / 1000, tz=timezone.utc)
 
     while new_issues_fetched:
         # get Jira issues via REST API
@@ -87,6 +180,8 @@ def collect_events(helper, ew):
         if opt_expand_fields:
             request_params["expand"] = opt_expand_fields.replace(" ", "")
 
+        helper.log_debug("Request parameters for Jira REST API: {}".format(request_params))
+
         request_headers = {
             "Authorization": "Basic {}".format(
                 base64.b64encode("{}:{}".format(opt_username, opt_password).encode("ascii")).decode(
@@ -94,13 +189,22 @@ def collect_events(helper, ew):
                 )
             )
         }
-        response = helper.send_http_request(
-            url="https://{}/rest/api/2/search".format(opt_jira_server),
-            method="GET",
-            parameters=request_params,
-            verify=opt_verify_cert,
-            headers=request_headers,
-        )
+
+        try:
+            response = helper.send_http_request(
+                url="https://{}/rest/api/2/search".format(opt_jira_server),
+                method="GET",
+                parameters=request_params,
+                verify=opt_verify_cert,
+                headers=request_headers,
+            )
+        except RequestException as exc:
+            helper.log_critical(
+                "Unable to send request to Jira REST API for input {}: {}".format(
+                    opt_input_name, exc
+                )
+            )
+            sys.exit(1)
 
         if not response.ok:
             helper.log_critical(
@@ -111,7 +215,16 @@ def collect_events(helper, ew):
             sys.exit(1)
 
         # check if new issues have been fetched (otherwise all pages have been queried)
-        response_data = response.json()
+        try:
+            response_data = response.json()
+        except RequestException as exc:
+            helper.log_critical(
+                "Unable to parse Jira REST API response as JSON: text={}, exc={}".format(
+                    response.text, exc
+                )
+            )
+            sys.exit(1)
+
         jira_issues = response_data["issues"]
 
         if len(jira_issues) == 0:
@@ -138,14 +251,22 @@ def collect_events(helper, ew):
                         )
 
                         # fetch all worklogs from issue (this endpoint does not support pagination: JRASERVER-69308)
-                        worklog_response = helper.send_http_request(
-                            url="https://{}/rest/api/2/issue/{}/worklog".format(
-                                opt_jira_server, issue["key"]
-                            ),
-                            method="GET",
-                            verify=opt_verify_cert,
-                            headers=request_headers,
-                        )
+                        try:
+                            worklog_response = helper.send_http_request(
+                                url="https://{}/rest/api/2/issue/{}/worklog".format(
+                                    opt_jira_server, issue["key"]
+                                ),
+                                method="GET",
+                                verify=opt_verify_cert,
+                                headers=request_headers,
+                            )
+                        except RequestException as exc:
+                            helper.log_error(
+                                "Unable to send request to Jira REST API to fetch worklogs for input {} - not all worklogs will be indexed: {}".format(
+                                    opt_input_name, exc
+                                )
+                            )
+                            continue
 
                         if not worklog_response.ok:
                             helper.log_warning(
@@ -156,7 +277,15 @@ def collect_events(helper, ew):
                             continue
 
                         # replace worklog in issue object
-                        issue["fields"]["worklog"] = worklog_response.json()
+                        try:
+                            issue["fields"]["worklog"] = worklog_response.json()
+                        except RequestException as exc:
+                            helper.log_critical(
+                                "Unable to parse Jira issue worklogs as JSON: text={}, exc={}".format(
+                                    worklog_response.text, exc
+                                )
+                            )
+                            continue
 
         # API pagination
         start_at = start_at + response_data["maxResults"]
@@ -164,21 +293,62 @@ def collect_events(helper, ew):
         # index collected Jira issues
         for issue in jira_issues:
             # extract updated timestamp
-            updated = datetime.strptime(issue["fields"]["updated"], "%Y-%m-%dT%H:%M:%S.%f%z")
+            try:
+                updated = datetime.strptime(issue["fields"]["updated"], "%Y-%m-%dT%H:%M:%S.%f%z")
+            except ValueError:
+                helper.log_critical(
+                    "Unable to parse updated time of Jira issue - this ticket won't be indexed! Please contact the TA developer! Updated field: {}".format(
+                        issue["fields"]["updated"]
+                    )
+                )
+                continue
 
-            event = helper.new_event(
-                time=updated.timestamp(),
-                source=opt_input_name,
-                index=helper.get_output_index(),
-                sourcetype=helper.get_sourcetype(),
-                data=json.dumps(issue),
+            try:
+                event = helper.new_event(
+                    time=updated.timestamp(),
+                    source=opt_input_name,
+                    index=helper.get_output_index(),
+                    sourcetype=helper.get_sourcetype(),
+                    data=json.dumps(issue),
+                )
+                ew.write_event(event)
+            except Exception as exc:
+                helper.log_critical("Unable to write Splunk event: {}".format(exc))
+                continue
+
+            # modify last_updated_time if it is later than current value
+            if updated > last_updated_time:
+                last_updated_time = updated
+
+            # increase the indexed Jira issue counter
+            num_issues_indexed = num_issues_indexed + 1
+
+    # update checkpoint value
+    try:
+        checkpoint_value = int(last_updated_time.timestamp() * 1000)
+        helper.log_info(
+            'Setting new checkpoint value "{}" ({}) for input {} ...'.format(
+                checkpoint_value, last_updated_time.strftime("%Y-%m-%d %H:%M.%f%z"), opt_input_name
             )
-            ew.write_event(event)
-
-        num_issues_indexed = num_issues_indexed + len(jira_issues)
-
-    helper.log_info(
-        "Successfully indexed {} Jira issues for input {}".format(
-            num_issues_indexed, opt_input_name
         )
-    )
+        helper.save_check_point(opt_input_name, checkpoint_value)
+        helper.log_info("Successfully updated checkpoint!")
+    except Exception as exc:
+        helper.log_critical(
+            "Unable to update checkpoint value - the next input will run with the same checkpoint value, which could lead to duplicate data! Exception: {}".format(
+                exc
+            )
+        )
+
+    if num_issues_indexed > 0:
+        helper.log_info(
+            "Successfully indexed {} Jira issues for input {}".format(
+                num_issues_indexed, opt_input_name
+            )
+        )
+    else:
+        helper.log_info(
+            "The input {} ran successfully! There were no (new) Jira issues indexed during this interval.".format(
+                opt_input_name
+            )
+        )

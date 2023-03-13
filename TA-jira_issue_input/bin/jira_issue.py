@@ -66,6 +66,17 @@ class ModInputjira_issue(modinput_wrapper.base_modinput.BaseModInput):
         )
         scheme.add_argument(
             smi.Argument(
+                "last_updated_start_time",
+                title="Last Updated Start Time",
+                description=(
+                    "The start time for the input defines which Jira issues should be collected based on their last updated time. Format: 'YYYY-MM-DD hh:mm' (UTC). Default: 1 week ago"
+                ),
+                required_on_create=False,
+                required_on_edit=False,
+            )
+        )
+        scheme.add_argument(
+            smi.Argument(
                 "issue_fields",
                 title="Issue Fields",
                 description=(
