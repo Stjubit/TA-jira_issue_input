@@ -1,0 +1,6 @@
+---
+- name: Create a symbolic link
+  ansible.builtin.file:
+    src: /tmp/appmount/output/TA-jira_issue_input
+    dest: /opt/splunk/etc/apps/TA-jira_issue_input
+    state: link

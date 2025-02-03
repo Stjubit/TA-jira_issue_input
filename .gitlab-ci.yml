@@ -1,0 +1,4 @@
+---
+include:
+  - project: blueprints/gitlab-ci
+    file: splunk-apps/splunk-ucc-full.yaml

@@ -6,7 +6,7 @@ This Splunk Technical Add-on enables you to index Jira issues by querying your J
 
 `project = SD AND status != "Canceled"`
 
-- this JQL query string matches all issues in the service desk (SD) project that haven't been canceled
+- This JQL query string matches all issues in the service desk (SD) project that haven't been canceled.
 
 ## Configuration
 
@@ -57,7 +57,7 @@ You can easily reindex data by modifying the checkpoint value for an input. The 
 
 *Please note that checkpoints are only used if you do not specify an `updated` field in your JQL!*
 
-Of course, you can also just delete and create an input to reindex data!
+Of course, you can also just delete and create a new input to reindex data!
 
 ## Update Notes
 
@@ -77,22 +77,4 @@ This TA includes a workaround for [JRASERVER-34746](https://jira.atlassian.com/b
 ## How to dev
 
 - Put your Splunk developer license in the root of this repository in a file called `splunk.lic`
-- Create a file with the name `splunkbase.credentials` in the root of this repository and add working Splunkbase credentials in it *(hint: BugMeNot)*:
-
-```
-SPLUNKBASE_USERNAME=<username>
-SPLUNKBASE_PASSWORD=<password>
-```
-
 - Start the Docker instace: `docker compose up [-d]`
-### Linux File Permissions
-
-Please make sure that files outside of the `bin/` and `appserver/controllers` directory do not have execute permissions and are not `.exe` files. Splunk recommends `644` for all app files outside of the `bin/` directory, `644` for scripts within the `bin/` directory that are invoked using an interpreter (e.g. `python my_script.py` or `sh my_script.sh`), and `755` for scripts within the `bin/` directory that are invoked directly (e.g. `./my_script.sh` or `./my_script`). Here's a snippet that ensures that file permissions are correct:
-
-```
-sudo find TA-jira_issue_input -type d -exec chmod 755 {} +
-sudo find TA-jira_issue_input -type f -exec chmod 644 {} +
-sudo find TA-jira_issue_input/bin/ -type f -name "*.exe" -exec chmod 755 {} +
-```
-
-**More infos:** [Splunk AppInspect check criteria](https://dev.splunk.com/enterprise/reference/appinspect/appinspectcheck/)
