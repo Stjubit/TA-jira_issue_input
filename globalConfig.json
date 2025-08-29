@@ -2,7 +2,7 @@
     "meta": {
         "name": "TA-jira_issue_input",
         "displayName": "Jira Issue Input Add-on",
-        "version": "0.0.0+None",
+        "version": "0.0.0+effd925",
         "restRoot": "TA_jira_issue_input",
         "schemaVersion": "0.0.9"
     },
@@ -135,7 +135,8 @@
                                 "maxLength": 4096
                             }
                         ],
-                        "field": "proxy_url"
+                        "field": "proxy_url",
+                        "required": true
                     },
                     "port": {
                         "type": "text",
@@ -150,7 +151,8 @@
                                 "isInteger": true
                             }
                         ],
-                        "field": "proxy_port"
+                        "field": "proxy_port",
+                        "required": true
                     },
                     "username": true,
                     "password": true,

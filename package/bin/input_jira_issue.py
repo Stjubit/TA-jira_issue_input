@@ -200,20 +200,70 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
             opt_jql = "updated > {} AND {}".format(checkpoint_value, str(opt_jql).strip())
             logger.debug("Updated JQL: {}".format(opt_jql))
 
+        # initialize request session
+        session = ta_helper.initialize_requests_session(
+            logger,
+            opt_verify_cert,
+            True,
+            session_key,
+            "ta_jira_issue_input_settings",
+            "custom_proxy",
+        )
+
+        request_headers = {
+            "Authorization": "Basic {}".format(
+                base64.b64encode("{}:{}".format(opt_username, opt_password).encode("ascii")).decode(
+                    "ascii"
+                )
+            )
+        }
+        session.headers = request_headers
+
+        # parse and validate JQL using Jira API
+        logger.info("Validating JQL filter ...")
+        validation_request_params = {"validation": "strict"}
+
+        try:
+            validate_response = session.post(
+                url="https://{}/rest/api/3/jql/parse".format(opt_jira_server),
+                params=validation_request_params,
+                json={"queries": [opt_jql]},
+            )
+
+            if not validate_response.ok or (
+                "errors" in validate_response.json()["queries"][0]
+                and len(validate_response.json()["queries"][0]["errors"]) > 0
+            ):
+                logger.critical(
+                    f"The JQL filter was marked as invalid by the Jira REST API. Please double-check your input settings! JQL={opt_jql}, Jira response={validate_response.text}"
+                )
+                log.modular_input_end(logger, normalized_input_name)
+                sys.exit(1)
+
+            logger.info("JQL filter is valid!")
+        except RequestException as exc:
+            log.log_exception(
+                logger,
+                exc,
+                "Jira API Error",
+                msg_before="Unable to validate JQL filter using Jira API. Exiting ... ",
+            )
+            log.modular_input_end(logger, normalized_input_name)
+            sys.exit(1)
+
         # API pagination
         # maxResults is not used, because every Jira server can have different limits
-        # total is not used, because it is not included in the response for expensive searches
         # last_updated_time gets initialized with checkpoint value
-        start_at = 0
-        new_issues_fetched = True
+        next_page_token = None
+        has_next_page = True
         num_issues_indexed = 0
         last_updated_time = datetime.fromtimestamp(checkpoint_value / 1000, tz=timezone.utc)
 
-        while new_issues_fetched:
+        while has_next_page:
             # get Jira issues via REST API
             logger.info(
-                "Sending request to Jira REST API (startAt={}, input={})".format(
-                    start_at, normalized_input_name
+                "Sending request to Jira REST API (nextPageToken={}, input={})".format(
+                    next_page_token, normalized_input_name
                 )
             )
 
@@ -221,7 +271,7 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
                 "jql": opt_jql,
                 "fields": "updated,{}".format(opt_issue_fields.replace(" ", "")),
                 "validateQuery": "true",
-                "startAt": start_at,
+                "nextPageToken": next_page_token,
             }
 
             if opt_expand_fields:
@@ -229,29 +279,10 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
 
             logger.debug("Request parameters for Jira REST API: {}".format(request_params))
 
-            request_headers = {
-                "Authorization": "Basic {}".format(
-                    base64.b64encode(
-                        "{}:{}".format(opt_username, opt_password).encode("ascii")
-                    ).decode("ascii")
-                )
-            }
-
-            # initialize request session
-            session = ta_helper.initialize_requests_session(
-                logger,
-                opt_verify_cert,
-                True,
-                session_key,
-                "ta_jira_issue_input_settings",
-                "custom_proxy",
-            )
-
             try:
                 response = session.get(
-                    url="https://{}/rest/api/2/search".format(opt_jira_server),
+                    url="https://{}/rest/api/3/search/jql".format(opt_jira_server),
                     params=request_params,
-                    headers=request_headers,
                 )
             except RequestException as exc:
                 log.log_exception(
@@ -272,7 +303,7 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
                 log.modular_input_end(logger, normalized_input_name)
                 sys.exit(1)
 
-            # check if new issues have been fetched (otherwise all pages have been queried)
+            # parse Jira response data as JSON
             try:
                 response_data = response.json()
             except RequestException as exc:
@@ -285,14 +316,22 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
                 log.modular_input_end(logger, normalized_input_name)
                 sys.exit(1)
 
-            jira_issues = response_data["issues"]
-
-            if len(jira_issues) == 0:
-                logger.debug(
+            # check if there are more pages to query
+            if (
+                "nextPageToken" not in response_data
+                or not response_data["nextPageToken"]
+                or ("isLast" in response_data and response_data["isLast"] is True)
+            ):
+                logger.info(
                     "All API pages have been queried for input {}".format(normalized_input_name)
                 )
-                new_issues_fetched = False
+                has_next_page = False
+            else:
+                # update next page token
+                next_page_token = response_data["nextPageToken"]
+                has_next_page = True
 
+            jira_issues = response_data["issues"]
             # workaround for bug JRASERVER-34746 (worklog field is limited to 20 results)
             if "worklog" in [field.strip() for field in opt_issue_fields.split(",")]:
                 for issue in jira_issues:
@@ -315,10 +354,9 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
                             # fetch all worklogs from issue (this endpoint does not support pagination: JRASERVER-69308)
                             try:
                                 worklog_response = session.get(
-                                    url="https://{}/rest/api/2/issue/{}/worklog".format(
+                                    url="https://{}/rest/api/3/issue/{}/worklog".format(
                                         opt_jira_server, issue["key"]
                                     ),
-                                    headers=request_headers,
                                 )
                             except RequestException as exc:
                                 log.log_exception(
@@ -348,9 +386,6 @@ def stream_events(inputs: smi.InputDefinition, event_writer: smi.EventWriter):
                                     msg_before=f"Unable to parse Jira issue worklogs as JSON: text={worklog_response.text}",
                                 )
                                 continue
-
-            # API pagination
-            start_at = start_at + response_data["maxResults"]
 
             # index collected Jira issues
             for issue in jira_issues:
